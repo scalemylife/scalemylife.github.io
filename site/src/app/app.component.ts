@@ -1,42 +1,39 @@
 import { Component, HostListener } from '@angular/core';
+import { OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'app';
   days: number;
   max: number;
+  results: string[];
 
-  // TODO https://stackoverflow.com/questions/18839048/how-to-read-a-file-in-angularjs
-  dataProvider() {
-    var data = [
-      '0',
-      '23.99'
-    ]; 
-
-    return data;
-  }
-
-  constructor() {
+  constructor(private http: HttpClient) {
     this.days = 22;
     this.max = 220;
   }
 
-  ngOnInit() {
-    this.drawGraph();
+  ngOnInit(): void {
+      this.http.get('./assets/data.json').subscribe(data => {
+        this.results = data['results'];
+        this.drawGraph(this.results);
+      });   
   }
 
   @HostListener('window:resize', ['$event'])
   onResize(event: any) {
-   this.drawGraph();
+    if (this.results !== undefined) {
+      this.drawGraph(this.results);
+    }
   }
 
-  drawGraph() {
+  drawGraph(data: string[]) {
     var ratio = this.max / this.days;
-    var data = this.dataProvider();
     var width = window.innerWidth;
     var height = window.innerHeight - document.body.offsetHeight;
     var factorX = Math.floor(width / Math.max(this.days, data.length));
