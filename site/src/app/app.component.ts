@@ -12,10 +12,15 @@ export class AppComponent implements OnInit {
   days: number;
   max: number;
   results: string[];
+  perDay: number;
+  total: number;
 
   constructor(private http: HttpClient) {
     this.days = 22;
     this.max = 220;
+
+    this.perDay = 0;
+    this.total = 0;
   }
 
   ngOnInit(): void {
@@ -34,21 +39,24 @@ export class AppComponent implements OnInit {
 
   drawGraph(data: string[]) {
     var ratio = this.max / this.days;
-    var width = window.innerWidth;
-    var height = window.innerHeight - document.body.offsetHeight;
+    var startPoint = Math.round(0.1 * document.body.clientWidth);
+    var width = window.innerWidth - startPoint;
+    var height = window.innerHeight - startPoint;
     var factorX = Math.floor(width / Math.max(this.days, data.length));
     var maxInDataOrMaxCONST = Math.max(this.max, Math.max.apply(Math, data));
     var factorY = Math.floor(Math.max(1, height / maxInDataOrMaxCONST));
 
     var context = this.getHiDpiContext(width, height);
     context.beginPath();
-    context.moveTo(0, window.innerHeight);
+    context.moveTo(startPoint, window.innerHeight);
+
+    console.log(startPoint);
     
     var sum = '0'; // float
     for (var x = 0; x < data.length; x++) {
       sum = (parseFloat(sum) + parseFloat(data[x])).toString();
       var y = height - Math.round(parseFloat(sum) * factorY);
-      context.lineTo(Math.round(x * factorX), y);
+      context.lineTo(startPoint + Math.round(x * factorX), y);
     }
     context.lineWidth = 2;
     context.strokeStyle = 'black';
@@ -57,8 +65,9 @@ export class AppComponent implements OnInit {
     context.beginPath();
     var todayWithFactor = Math.max(0, Math.round((data.length-1) * factorX));
     var todayY = height - Math.round(parseFloat(sum) * factorY);
-    context.moveTo(todayWithFactor, height);
-    context.lineTo(todayWithFactor, todayY);
+    context.moveTo(startPoint + todayWithFactor, height);
+    var fontSize = Math.max(1, Math.round(Math.min(factorY / 2, factorX))); // TODO refactor global
+    context.lineTo(startPoint + todayWithFactor, Math.max(todayY, height - Math.round(2 * startPoint)));
     if (parseFloat(sum) > (data.length * ratio)){
       context.lineWidth = 2;
       context.strokeStyle = 'red';
@@ -68,20 +77,18 @@ export class AppComponent implements OnInit {
     context.stroke();
       // target line
     context.beginPath();
-    context.moveTo(0, height);
-    context.lineTo(Math.round(this.days * factorX), 0);    
+    context.moveTo(startPoint, height);
+    context.lineTo(startPoint + Math.round(this.days * factorX), 0);    
     context.lineWidth = 2;
     context.stroke();
     // description
     context.beginPath();
     context.fillStyle = 'black';
-    var fontSize = Math.max(10, Math.min(factorY, factorX)); // TODO refactor global
-    context.font = fontSize + 'px Helvetica, sans-serif';
-    context.fillText(sum + ' von ' + data.length * ratio, todayWithFactor, Math.round(Math.max(2 * fontSize, todayY - 2 * fontSize)));
-    context.font = 2 * fontSize + 'px Helvetica, sans-serif';
-    var total = this.max - parseFloat(sum);
-    var perDay = Math.floor(total / (this.days - (data.length)));
-    context.fillText(total + ' ~ ' + perDay + ' pD', 2 * fontSize, 2 * fontSize);
+    context.font = fontSize + 'em Helvetica, sans-serif';
+    this.total = Math.floor(this.max - parseFloat(sum));
+    this.perDay = Math.floor(this.total / (this.days - (data.length)));
+    var text = sum + '/' + data.length * ratio;
+    context.fillText(text, startPoint, Math.max(todayY, height - Math.round(2 * startPoint)));
     context.stroke();
   }
 
