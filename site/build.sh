@@ -1,5 +1,7 @@
 #!/bin/sh
 # ng build --prod --build-optimizer
-cd dist/
+cd ..
+rm *.*
+cd site/dist/
 cp * ../../
 

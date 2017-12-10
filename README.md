@@ -1,2 +1,0 @@
-# scalemylife.github.io
-Cheers
