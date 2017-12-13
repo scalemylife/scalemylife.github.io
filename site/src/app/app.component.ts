@@ -14,6 +14,7 @@ export class AppComponent implements OnInit {
   results: string[];
   innerWidth: number;
   innerHeight: number;
+  minHeight: number;
 
   constructor(private http: HttpClient) {
   }
@@ -53,14 +54,19 @@ export class AppComponent implements OnInit {
     }
     var maxInDataOrMaxCONST = Math.max(this.max, sumData);
     var factorY = Math.floor(Math.max(1, height / maxInDataOrMaxCONST));
-
-    var canvas = this.getHiDpiContext(width + border, height + border);
-    var context = canvas.getContext("2d", {alpha: false});
+    this.minHeight = (2 * border + maxInDataOrMaxCONST) * factorY;
+    if (height < this.minHeight) {
+      height = this.minHeight;
+    }
 
     var startX = Math.round(0.5 * border);
     var startY = Math.round(0.5 * border + height);
     var targetX = Math.round(0.5 * border + (this.days - 1) * factorX);
     var targetY = Math.round(0.5 * border + height - (this.max * factorY));
+
+    var canvas = this.getHiDpiContext(width + border, height + border);
+    var context = canvas.getContext("2d", {alpha: false});
+
     //  var startY = height - (ratio * factorY);
     // x-axis
     context.beginPath();
@@ -83,25 +89,25 @@ export class AppComponent implements OnInit {
     context.stroke();
 
     // values 
-    var x = startX;
-    var y = startY;
     var sum = '0'; // float
+    var x: number;
+    var y: number;
     for (var i = 0; i < data.length; i++) {
       context.beginPath();    
-      context.moveTo(x, y);
+      
       sum = (parseFloat(sum) + parseFloat(data[i])).toString();
-      var toX = startX + Math.round(i * factorX);
-      var toY = startY - (Math.round(parseFloat(sum)) * factorY);
-      context.lineTo(toX, toY);
+      x = startX + Math.round(i * factorX);
+      y = startY - (Math.round(parseFloat(sum)) * factorY);
+      context.moveTo(x, startY);
+      context.lineTo(x, y);
       context.lineWidth = 2;
-      if (parseFloat(sum) > (i+1 * ratio)){
+console.log('red = ' + sum + ' > ' + (i+1) * ratio + '?');
+      if (parseFloat(sum) > ((i+1) * ratio)){
         context.strokeStyle = 'red';
       } else {
         context.strokeStyle = 'green';
       }
       context.stroke();
-      x = toX; 
-      y = toY;  
     }
     var remaining = Math.floor(this.max - parseFloat(sum));
     var perDay = Math.round(remaining / (this.days - (length)) * 100)/100;
@@ -128,11 +134,11 @@ export class AppComponent implements OnInit {
     var totalText: string = '' + (Math.round(remaining*100)/100);
     if (remaining > 0) {
       context.fillStyle = 'green';
-      totalText += '@' + perDay;
+      totalText += ' @' + perDay;
     } else {
       context.fillStyle = 'red';
     }
-    context.fillText(totalText, Math.round(2.5 * border), Math.round(1.08 * border);    
+    context.fillText(totalText, Math.round(2.5 * border), Math.round(1.08 * border));    
     context.stroke();
     // TODO this.saveCanvas(canvas); // http://weworkweplay.com/play/saving-html5-canvas-as-image/
   }
