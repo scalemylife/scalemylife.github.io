@@ -114,7 +114,7 @@ console.log('red = ' + sum + ' > ' + (i+1) * ratio + '?');
 
     // dotted line to target
     context.beginPath();
-    context.setLineDash([5, 15]);
+    context.setLineDash([1, 2]);
     context.moveTo(x, y);
     context.lineTo(targetX, targetY);
     context.stroke();
