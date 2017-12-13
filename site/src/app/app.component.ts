@@ -38,6 +38,7 @@ export class AppComponent implements OnInit {
   }
 
   drawGraph(data: string[]) {
+
     var ratio = this.max / this.days;
     var startPoint = Math.round(0.1 * document.body.clientWidth);
     var width = window.innerWidth - startPoint;
@@ -48,7 +49,7 @@ export class AppComponent implements OnInit {
 
     var context = this.getHiDpiContext(width, height);
     context.beginPath();
-    context.moveTo(startPoint, window.innerHeight);
+    context.moveTo(startPoint, height);
 
     console.log(startPoint);
     
@@ -58,37 +59,49 @@ export class AppComponent implements OnInit {
       var y = height - Math.round(parseFloat(sum) * factorY);
       context.lineTo(startPoint + Math.round(x * factorX), y);
     }
+    this.total = Math.floor(this.max - parseFloat(sum));
+    // this.perDay = Math.round(this.total / (this.days - (data.length)) * 100)/100;
+    this.perDay = ratio * this.total/this.max;
+
     context.lineWidth = 2;
-    context.strokeStyle = 'black';
-    context.stroke();
-    // today line
-    context.beginPath();
-    var todayWithFactor = Math.max(0, Math.round((data.length-1) * factorX));
-    var todayY = height - Math.round(parseFloat(sum) * factorY);
-    context.moveTo(startPoint + todayWithFactor, height);
-    var fontSize = Math.max(1, Math.round(Math.min(factorY / 2, factorX))); // TODO refactor global
-    context.lineTo(startPoint + todayWithFactor, Math.max(todayY, height - Math.round(2 * startPoint)));
     if (parseFloat(sum) > (data.length * ratio)){
-      context.lineWidth = 2;
       context.strokeStyle = 'red';
     } else {
       context.strokeStyle = 'green';
     }
     context.stroke();
-      // target line
+
+    // total summary
+    context.beginPath();
+    context.lineWidth = factorX;
+    var totalDegrees = (this.max - this.total)/this.max * 2 * Math.PI;
+    context.arc(startPoint, startPoint, Math.round(0.5 * startPoint), totalDegrees, 2 * Math.PI);
+    context.stroke();
+
+    // today line
+    context.beginPath();
+    var todayWithFactor = Math.max(0, Math.round((data.length-1) * factorX));
+    var todayY = height - Math.round(parseFloat(sum) * factorY);
+    var fontSize = Math.max(1, Math.round(Math.min(factorY / 2, factorX))); // TODO refactor global
+    context.stroke();
+    // target line
     context.beginPath();
     context.moveTo(startPoint, height);
-    context.lineTo(startPoint + Math.round(this.days * factorX), 0);    
+    context.lineTo(startPoint + Math.round(this.days * factorX), height - Math.round(ratio * this.days * factorY));    
     context.lineWidth = 2;
+    context.strokeStyle = 'black';
     context.stroke();
-    // description
+
+    // total description
+    // var todayTarget = data.length * ratio;
+    // var today = (Math.trunc(parseFloat(sum) * 100)/100) ;
     context.beginPath();
     context.fillStyle = 'black';
     context.font = fontSize + 'em Helvetica, sans-serif';
-    this.total = Math.floor(this.max - parseFloat(sum));
-    this.perDay = Math.floor(this.total / (this.days - (data.length)));
-    var text = sum + '/' + data.length * ratio;
-    context.fillText(text, startPoint, Math.max(todayY, height - Math.round(2 * startPoint)));
+    var totalText = '' + (Math.round(this.total*100)/100);
+    context.fillText(totalText, 0.9 * startPoint, 0.9 * startPoint);
+    var perDayText = (Math.round(this.perDay*100)/100) + '';
+    context.fillText(perDayText, 0.9 * startPoint, 1.2 * startPoint);
     context.stroke();
   }
 
