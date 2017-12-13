@@ -45,23 +45,22 @@ export class AppComponent implements OnInit {
     var height = window.innerHeight - startPoint;
     var factorX = Math.floor(width / Math.max(this.days, data.length));
     var maxInDataOrMaxCONST = Math.max(this.max, Math.max.apply(Math, data));
+    // TODO refactor factorY
     var factorY = Math.floor(Math.max(1, height / maxInDataOrMaxCONST));
 
-    var context = this.getHiDpiContext(width, height);
+    var canvas = this.getHiDpiContext(width, height);
+    var context = canvas.getContext("2d", {alpha: false});
     context.beginPath();
     context.moveTo(startPoint, height);
-
-    console.log(startPoint);
-    
     var sum = '0'; // float
-    for (var x = 0; x < data.length; x++) {
-      sum = (parseFloat(sum) + parseFloat(data[x])).toString();
-      var y = height - Math.round(parseFloat(sum) * factorY);
-      context.lineTo(startPoint + Math.round(x * factorX), y);
+    for (var i = 0; i < data.length; i++) {
+      sum = (parseFloat(sum) + parseFloat(data[i])).toString();
+      var x = startPoint + Math.round(i * factorX);
+      var y = height - (Math.round(parseFloat(sum)) * factorY);
+      context.lineTo(x, y);
     }
     this.total = Math.floor(this.max - parseFloat(sum));
-    // this.perDay = Math.round(this.total / (this.days - (data.length)) * 100)/100;
-    this.perDay = ratio * this.total/this.max;
+    this.perDay = Math.round(this.total / (this.days - (data.length)) * 100)/100;
 
     context.lineWidth = 2;
     if (parseFloat(sum) > (data.length * ratio)){
@@ -78,31 +77,33 @@ export class AppComponent implements OnInit {
     context.arc(startPoint, startPoint, Math.round(0.5 * startPoint), totalDegrees, 2 * Math.PI);
     context.stroke();
 
-    // today line
-    context.beginPath();
-    var todayWithFactor = Math.max(0, Math.round((data.length-1) * factorX));
-    var todayY = height - Math.round(parseFloat(sum) * factorY);
-    var fontSize = Math.max(1, Math.round(Math.min(factorY / 2, factorX))); // TODO refactor global
-    context.stroke();
     // target line
     context.beginPath();
-    context.moveTo(startPoint, height);
-    context.lineTo(startPoint + Math.round(this.days * factorX), height - Math.round(ratio * this.days * factorY));    
+    var startY = height - (ratio * factorY);
+    context.moveTo(startPoint, startY);
+    var x = startPoint + Math.round(this.days * factorX);
+    var y = height - (Math.round(ratio * this.days) * factorY);
+    context.lineTo(x, y);    
     context.lineWidth = 2;
-    context.strokeStyle = 'black';
+    context.strokeStyle = 'green';
     context.stroke();
 
     // total description
-    // var todayTarget = data.length * ratio;
-    // var today = (Math.trunc(parseFloat(sum) * 100)/100) ;
     context.beginPath();
     context.fillStyle = 'black';
+    var fontSize = Math.max(1, Math.round(Math.min(factorY / 2, factorX)));
     context.font = fontSize + 'em Helvetica, sans-serif';
     var totalText = '' + (Math.round(this.total*100)/100);
-    context.fillText(totalText, 0.9 * startPoint, 0.9 * startPoint);
-    var perDayText = (Math.round(this.perDay*100)/100) + '';
-    context.fillText(perDayText, 0.9 * startPoint, 1.2 * startPoint);
+    context.fillStyle = 'green';
+    context.fillText(totalText + '@' + this.perDay, 1.9 * startPoint, 1 * startPoint);
     context.stroke();
+
+    // this.saveCanvas(canvas);
+  }
+
+  saveCanvas(canvas) {
+    var dataURL = canvas.toDataURL('image/png');
+    // TODO upload service
   }
 
   getHiDpiContext(width: number, height: number) {
@@ -114,7 +115,7 @@ export class AppComponent implements OnInit {
     canvas.style.height = height + "px";
     canvas.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
 
-    return canvas.getContext("2d", {alpha: false});
+    return canvas;
   }
 
   getRatio() {
