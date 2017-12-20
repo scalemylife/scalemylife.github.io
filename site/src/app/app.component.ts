@@ -138,7 +138,8 @@ console.log('red = ' + sum + ' > ' + (i+1) * ratio + '?');
     } else {
       context.fillStyle = 'red';
     }
-    context.fillText(totalText, Math.round(2.5 * border), Math.round(1.08 * border));    
+    context.textAlign = 'center';
+    context.fillText(totalText, Math.round(2 * border), Math.round(2 * border));    
     context.stroke();
     // TODO this.saveCanvas(canvas); // http://weworkweplay.com/play/saving-html5-canvas-as-image/
   }
